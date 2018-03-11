@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CreditScoreDonut">
+        <attr name="progress_color" format="color" />
+        <attr name="progress_width" format="dimension" />
+        <attr name="boundary_color" format="color" />
+        <attr name="boundary_width" format="dimension" />
+        <attr name="progress_boundary_gap" format="dimension" />
+        <attr name="animation_duration_ms" format="integer" />
+        <attr name="secondary_text_color" format="color" />
+    </declare-styleable>
+</resources>

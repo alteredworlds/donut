@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">CreditDonut</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="credit_score_is">Your credit score is</string>
+    <string name="credit_score_total">out of %1$d</string>
+    <string name="no_network_available">Please check your internet connection and try again.</string>
+</resources>

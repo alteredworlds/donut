@@ -1,0 +1,6 @@
+<resources>
+    <dimen name="credit_donut_layout_margin">30dp</dimen>
+    <dimen name="credit_donut_outer_boundary_width">2dp</dimen>
+    <dimen name="credit_donut_boundary_progress_gap">6dp</dimen>
+    <dimen name="credit_donut_progress_width">6dp</dimen>
+</resources>
