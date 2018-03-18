@@ -1,6 +1,7 @@
 package com.example.twcgilbert.donut.ui
 
 import android.databinding.ObservableBoolean
+import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import com.example.twcgilbert.donut.repo.DataRepository
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -12,11 +13,12 @@ import timber.log.Timber
  * Created by twcgilbert on 06/03/2018.
  */
 class MainActivityViewModel(
-        private val view: MainActivityContract.View,
         private val repository: DataRepository) :
         MainActivityContract.ViewModel {
 
     private val disposables = CompositeDisposable()
+
+    override val error = ObservableField<String>()
 
     override val maxScore = ObservableInt()
 
@@ -39,7 +41,7 @@ class MainActivityViewModel(
                         {
                             Timber.e(it, "Failure!")
                             inProgress.set(false)
-                            view.showError(it.localizedMessage)
+                            error.set(it.localizedMessage)
                         }
                 ))
     }

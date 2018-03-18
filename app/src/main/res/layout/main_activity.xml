@@ -13,6 +13,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:snackBarText="@{viewModel.error}"
         tools:context="com.example.twcgilbert.donut.ui.MainActivity">
 
         <android.support.design.widget.AppBarLayout

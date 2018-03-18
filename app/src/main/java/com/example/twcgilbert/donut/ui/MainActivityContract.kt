@@ -9,10 +9,6 @@ import com.example.twcgilbert.donut.common.ui.BaseContract
  */
 interface MainActivityContract {
 
-    interface View : BaseContract.View {
-
-    }
-
     interface ViewModel : BaseContract.ViewModel {
 
         val maxScore: ObservableInt
