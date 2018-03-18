@@ -6,8 +6,6 @@ import com.example.twcgilbert.donut.repo.network.CreditReportServiceDummyDelayed
 import com.example.twcgilbert.donut.repo.network.CreditReportServiceNoNetwork
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnit
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -22,8 +20,6 @@ class MainActivityViewModelTests : CreditDonutTestBase() {
     @get:Rule
     var mockitoRule = MockitoJUnit.rule()
 
-    @Mock
-    private lateinit var view: MainActivityContract.View
 
     private lateinit var viewModel: MainActivityContract.ViewModel
 
@@ -34,9 +30,7 @@ class MainActivityViewModelTests : CreditDonutTestBase() {
     @Test
     fun testViewModel() {
 
-        viewModel = MainActivityViewModel(
-                view,
-                DataRepositoryImpl(CreditReportServiceDummy()))
+        viewModel = MainActivityViewModel(DataRepositoryImpl(CreditReportServiceDummy()))
 
         expectNotInProgressAllZero()
     }
@@ -44,9 +38,7 @@ class MainActivityViewModelTests : CreditDonutTestBase() {
     @Test
     fun testViewModelNoNetwork() {
 
-        viewModel = MainActivityViewModel(
-                view,
-                DataRepositoryImpl(CreditReportServiceNoNetwork()))
+        viewModel = MainActivityViewModel(DataRepositoryImpl(CreditReportServiceNoNetwork()))
 
         expectNotInProgressAllZero()
 
@@ -56,14 +48,12 @@ class MainActivityViewModelTests : CreditDonutTestBase() {
         testScheduler.advanceTimeBy(1, TimeUnit.MICROSECONDS)
 
         // we expect no network state to have been notified to the view
-        verify(view).showError(CreditReportServiceNoNetwork.NO_NETWORK)
+        assertEquals(CreditReportServiceNoNetwork.NO_NETWORK, viewModel.error.get())
     }
 
     @Test
     fun testViewModelRetrieveData() {
-        viewModel = MainActivityViewModel(
-                view,
-                DataRepositoryImpl(CreditReportServiceDummy()))
+        viewModel = MainActivityViewModel(DataRepositoryImpl(CreditReportServiceDummy()))
 
         expectNotInProgressAllZero()
 
@@ -87,9 +77,7 @@ class MainActivityViewModelTests : CreditDonutTestBase() {
 
     @Test
     fun testViewModelRetrieveDataDelayed() {
-        viewModel = MainActivityViewModel(
-                view,
-                DataRepositoryImpl(CreditReportServiceDummyDelayed()))
+        viewModel = MainActivityViewModel(DataRepositoryImpl(CreditReportServiceDummyDelayed()))
 
         expectNotInProgressAllZero()
 

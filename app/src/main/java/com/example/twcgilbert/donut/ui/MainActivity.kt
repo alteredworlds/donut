@@ -8,7 +8,7 @@ import com.example.twcgilbert.donut.databinding.MainActivityBinding
 
 import javax.inject.Inject
 
-class MainActivity : BaseActivity(), MainActivityContract.View {
+class MainActivity : BaseActivity() {
 
     @Inject
     lateinit var viewModel: MainActivityContract.ViewModel
