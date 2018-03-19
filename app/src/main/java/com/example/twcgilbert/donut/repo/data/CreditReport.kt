@@ -3,7 +3,7 @@ package com.example.twcgilbert.donut.repo.data
 /**
  * Created by twcgilbert on 06/03/2018.
  */
-data class CreditReport(val creditReportInfo: CreditReportInfo)
+data class CreditReport(val creditReportInfo: CreditReportInfo?)
 /* Based on:
 {
    "accountIDVStatus":"PASS",
