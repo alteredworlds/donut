@@ -35,8 +35,8 @@ class MainActivityViewModel(
                         {
                             Timber.d("Success!")
                             inProgress.set(false)
-                            score.set(it.creditReportInfo.score)
-                            maxScore.set(it.creditReportInfo.maxScoreValue)
+                            score.set(it.creditReportInfo?.score ?: 0)
+                            maxScore.set(it.creditReportInfo?.maxScoreValue ?: 0)
                         },
                         {
                             Timber.e(it, "Failure!")
