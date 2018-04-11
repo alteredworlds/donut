@@ -109,7 +109,6 @@ jobs:
       - run:
           name: Download instrumented test results from Firebase Test Lab
           command: gsutil -m cp -r -U "`gsutil ls gs://test-lab-v60t9u69p50y8-k4x4t2w8hj8z8 | tail -1`*" ~/code/firebase/
-      - *persist_firebase_workspace
       - store_artifacts:
           path: firebase/
           destination: /firebase/
