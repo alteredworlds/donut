@@ -108,7 +108,7 @@ jobs:
           command: mkdir firebase
       - run:
           name: Download instrumented test results from Firebase Test Lab
-          command: gsutil -o GSUtil:check_hashes=hash_always -m cp -r -U "`gsutil ls gs://test-lab-v60t9u69p50y8-k4x4t2w8hj8z8 | tail -1`*" ~/code/firebase/
+          command: gsutil -o GSUtil:check_hashes=always -m cp -r -U "`gsutil ls gs://test-lab-v60t9u69p50y8-k4x4t2w8hj8z8 | tail -1`*" ~/code/firebase/
       - store_artifacts:
           path: firebase/
           destination: /firebase/
@@ -120,21 +120,26 @@ workflows:
   version: 2
   all_flavours:
     jobs:
-      - build_debug:
-          filters:
-            tags:
-              only: /.*/
+     - test_instrumented:
+              filters:
+                tags:
+                  only: /.*
 
-      - test_unit:
-          filters:
-            tags:
-              only: /.*
-          requires:
-            - build_debug
-
-      - test_instrumented:
-          filters:
-            tags:
-              only: /.*
-          requires:
-            - test_unit
+#      - build_debug:
+#          filters:
+#            tags:
+#              only: /.*/
+#
+#      - test_unit:
+#          filters:
+#            tags:
+#              only: /.*
+#          requires:
+#            - build_debug
+#
+#      - test_instrumented:
+#          filters:
+#            tags:
+#              only: /.*
+#          requires:
+#            - test_unit
