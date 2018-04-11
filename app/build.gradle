@@ -33,11 +33,16 @@ android {
     }
 
     dataBinding {
-        enabled = true
+        enabled true
     }
 
     androidExtensions {
-        experimental = true
+        experimental true
+    }
+
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
     }
 
     compileOptions {
