@@ -70,6 +70,50 @@ jobs:
           path: app/build/test-results/
           destination: /test-results/
 
+  ## Run instrumented tests
+  test_instrumented:
+    <<: *android_config
+    steps:
+      - checkout
+      - *restore_dependency_cache
+      - run:
+          name: Download dependencies
+          command: ./gradlew androidDependencies --no-daemon
+      - *save_dependency_cache
+      - run:
+          name: Gradle build (debug)
+          command: ./gradlew assembleDebug --no-daemon  -Pkotlin.incremental=false
+      - run:
+          name: Gradle build (debugAndroidTest)
+          command: ./gradlew assembleDebugAndroidTest --no-daemon  -Pkotlin.incremental=false
+      - run:
+          name: Install AWS CLI
+          command: sudo apt-get -y -qq install awscli
+      - run:
+          name: AWS S3 get gcloud credentials
+          command: |
+            mkdir tmp
+            aws s3 cp s3://aw.credentials/Donut-cac7f5e9e3c6.json tmp --region eu-west-1
+      - run:
+          name: Set Google Cloud target project (CurveDev)
+          command: gcloud config set project donut-4bd61
+      - run:
+          name: Authenticate with Google Cloud
+          command: gcloud auth activate-service-account donut-4bd61@appspot.gserviceaccount.com --key-file tmp/Donut-cac7f5e9e3c6.json
+      - run:
+          name: Run instrumented test on Firebase Test Lab
+          command: gcloud firebase test android run --type instrumentation --app app/build/outputs/apk/debug/app-debug.apk --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk --device model=Nexus6P,version=27,locale=en_US,orientation=portrait --environment-variables coverage=true,coverageFile=/sdcard/tmp/code-coverage/connected/coverage.ec --directories-to-pull=/sdcard/tmp --timeout 20m
+      - run:
+          name: Create directory to store test results
+          command: mkdir firebase
+      - run:
+          name: Download instrumented test results from Firebase Test Lab
+          command: gsutil -m cp -r -U "`gsutil ls gs://test-lab-v60t9u69p50y8-k4x4t2w8hj8z8 | tail -1`*" ~/code/firebase/
+      - *persist_firebase_workspace
+      - store_artifacts:
+          path: firebase/
+          destination: /firebase/
+
 # see https://circleci.com/docs/2.0/workflows/#git-tag-job-execution
 # goal is to BUILD & TEST for all branches & all tags
 #         to DEPLOY only for tags against master marked with a version number
@@ -88,3 +132,10 @@ workflows:
               only: /.*
           requires:
             - build_debug
+
+      - test_instrumented:
+          filters:
+            tags:
+              only: /.*
+          requires:
+            - test_unit
