@@ -120,26 +120,21 @@ workflows:
   version: 2
   all_flavours:
     jobs:
-     - test_instrumented:
-              filters:
-                tags:
-                  only: /.*
+      - build_debug:
+          filters:
+            tags:
+              only: /.*/
 
-#      - build_debug:
-#          filters:
-#            tags:
-#              only: /.*/
-#
-#      - test_unit:
-#          filters:
-#            tags:
-#              only: /.*
-#          requires:
-#            - build_debug
-#
-#      - test_instrumented:
-#          filters:
-#            tags:
-#              only: /.*
-#          requires:
-#            - test_unit
+      - test_unit:
+          filters:
+            tags:
+              only: /.*
+          requires:
+            - build_debug
+
+      - test_instrumented:
+          filters:
+            tags:
+              only: /.*
+          requires:
+            - test_unit
