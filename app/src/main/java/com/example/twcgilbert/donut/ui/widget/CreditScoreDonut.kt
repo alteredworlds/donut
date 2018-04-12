@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import com.example.twcgilbert.donut.R
+import java.util.*
 
 /**
  * Created by twcgilbert on 11/03/2018.
@@ -17,10 +18,6 @@ import com.example.twcgilbert.donut.R
 
 /**
  * Based on https://stackoverflow.com/questions/31219455/android-round-edges-on-ring-shaped-progressbar
- * This custom view code is as yet far from optimal.
- * It contains far too many magic numbers, for starters...
- * The current design is inflexible & RectF instantiation could be moved out of onDraw
- * Similarly Paint field setters needn't be called in onDraw
  */
 class CreditScoreDonut @JvmOverloads constructor(
         context: Context,
@@ -40,11 +37,17 @@ class CreditScoreDonut @JvmOverloads constructor(
     private var progressColor: Int
     private var secondaryTextColor: Int
 
-    private val paint: Paint
+    private val textPaintSmall: Paint
+    private val textPaintLarge: Paint
+
+    private val boundaryPaint: Paint
+    private val boundaryOuterOval = RectF()
+
+    private val progressIndicatorPaint: Paint
+    private val progressIndicatorOval = RectF()
+    private var diameter = 0
 
     init {
-        paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
         val array = context.obtainStyledAttributes(attrs, R.styleable.CreditScoreDonut)
         try {
             progressColor = array.getColor(R.styleable.CreditScoreDonut_progress_color, Color.BLACK)
@@ -54,74 +57,98 @@ class CreditScoreDonut @JvmOverloads constructor(
             progressBoundaryGap = array.getDimension(R.styleable.CreditScoreDonut_progress_boundary_gap, 4.0f)
             animationDuration = array.getInteger(R.styleable.CreditScoreDonut_animation_duration_ms, 400)
             secondaryTextColor = array.getInteger(R.styleable.CreditScoreDonut_secondary_text_color, Color.BLACK)
+
+            textPaintSmall = Paint(Paint.ANTI_ALIAS_FLAG)
+            textPaintSmall.textAlign = Paint.Align.CENTER
+            textPaintSmall.strokeWidth = 0f
+            textPaintSmall.color = secondaryTextColor
+
+            textPaintLarge = Paint(Paint.ANTI_ALIAS_FLAG)
+            textPaintLarge.textAlign = Paint.Align.CENTER
+            textPaintLarge.strokeWidth = 0f
+            textPaintLarge.color = progressColor
+
+            boundaryPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            boundaryPaint.color = boundaryRingColor
+            boundaryPaint.strokeWidth = boundaryRingStrokeWidth
+            boundaryPaint.isAntiAlias = true
+            boundaryPaint.strokeCap = Paint.Cap.BUTT
+            boundaryPaint.style = Paint.Style.STROKE
+
+            progressIndicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            progressIndicatorPaint.color = progressColor
+            progressIndicatorPaint.strokeWidth = progressStrokeWidth
+            progressIndicatorPaint.isAntiAlias = true
+            progressIndicatorPaint.strokeCap = Paint.Cap.ROUND
+            progressIndicatorPaint.style = Paint.Style.STROKE
+
+        } catch (e: Exception) {
+            throw InvalidPropertiesFormatException(e)
         } finally {
             array.recycle()
         }
     }
 
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+
+        // QUESTION: when can (right - left) differ from onDraw() {canvas.width}?
+        //  which values can I cache here, and which need to be calculated in onDraw?
+        diameter = Math.min(width, height)
+
+        // TEST SIZES depend on diameter of enclosing circle
+        textPaintSmall.textSize = diameter / 14f
+        textPaintLarge.textSize = diameter / 4f
+
+        // Boundary offset just inside enclosing circle
+        val outerPad = boundaryRingStrokeWidth / 2.0f
+        boundaryOuterOval.set(outerPad, outerPad, diameter - outerPad, diameter - outerPad)
+
+        // Progress Indicator inset a bit further
+        val pad = boundaryRingStrokeWidth + progressBoundaryGap + progressStrokeWidth / 2.0f
+        progressIndicatorOval.set(pad, pad, diameter - pad, diameter - pad)
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val diameter = Math.min(width, height)
-        drawOuterRing(canvas, diameter)
-
+        drawOuterBoundary(canvas)
         if (0 != maxProgress) {
-            drawProgressIndicator(canvas, diameter)
-            drawText(canvas, diameter)
+            drawProgressIndicator(canvas)
+            drawText(canvas)
         }
     }
 
-    private fun drawOuterRing(canvas: Canvas, diameter: Int) {
-        val outerPad = boundaryRingStrokeWidth / 2.0f
-        val outerOval = RectF(outerPad, outerPad, diameter - outerPad, diameter - outerPad)
-        paint.color = boundaryRingColor
-        paint.strokeWidth = boundaryRingStrokeWidth
-        paint.isAntiAlias = true
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.style = Paint.Style.STROKE
-        canvas.drawArc(outerOval, 0.0f, 360.0f, false, paint)
-    }
+    private fun drawOuterBoundary(canvas: Canvas) =
+            canvas.drawArc(boundaryOuterOval,
+                    0.0f,
+                    360.0f,
+                    false,
+                    boundaryPaint)
 
-    private fun drawProgressIndicator(canvas: Canvas, diameter: Int) {
-        val pad = boundaryRingStrokeWidth + progressBoundaryGap + progressStrokeWidth / 2.0f
-        val innerOval = RectF(pad, pad, diameter - pad, diameter - pad)
+    private fun drawProgressIndicator(canvas: Canvas) =
+            canvas.drawArc(progressIndicatorOval,
+                    startAngle,
+                    sweepAngle,
+                    false,
+                    progressIndicatorPaint)
 
-        paint.color = progressColor
-        paint.strokeWidth = progressStrokeWidth
-        paint.isAntiAlias = true
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.style = Paint.Style.STROKE
-        canvas.drawArc(innerOval, startAngle, sweepAngle, false, paint)
-    }
-
-    private fun drawText(canvas: Canvas, diameter: Int) {
-        val largeFontSize = diameter / 4f
-        val smallFontSize = diameter / 14f
-
+    private fun drawText(canvas: Canvas) {
         // horizontally centered text
         val xPos = canvas.width / 2.0f
         var yPos: Float
 
-        paint.textAlign = Paint.Align.CENTER
-        paint.strokeWidth = 0f
-
         // top line (smaller font)
-        paint.textSize = smallFontSize
-        paint.color = secondaryTextColor
-        yPos = 0.3f * canvas.height - 0.5f * (paint.descent() + paint.ascent())
-        canvas.drawText(context.getString(R.string.credit_score_is), xPos, yPos, paint)
+        yPos = 0.3f * canvas.height - 0.5f * (textPaintSmall.descent() + textPaintSmall.ascent())
+        canvas.drawText(context.getString(R.string.credit_score_is), xPos, yPos, textPaintSmall)
 
         // Progress value (larger font)
-        paint.textSize = largeFontSize
-        paint.color = progressColor
-        yPos = 0.5f * canvas.height - 0.5f * (paint.descent() + paint.ascent())
-        canvas.drawText(getProgressFromSweepAngle().toString(), xPos, yPos, paint)
+        yPos = 0.5f * canvas.height - 0.5f * (textPaintLarge.descent() + textPaintLarge.ascent())
+        canvas.drawText(getProgressFromSweepAngle().toString(), xPos, yPos, textPaintLarge)
 
         // bottom line (smaller font)
-        paint.textSize = smallFontSize
-        paint.color = secondaryTextColor
-        yPos = 0.7f * canvas.height - 0.5f * (paint.descent() + paint.ascent())
-        canvas.drawText(context.getString(R.string.credit_score_total, maxProgress), xPos, yPos, paint)
+        yPos = 0.7f * canvas.height - 0.5f * (textPaintSmall.descent() + textPaintSmall.ascent())
+        canvas.drawText(context.getString(R.string.credit_score_total, maxProgress), xPos, yPos, textPaintSmall)
     }
 
     private fun getSweepAngleFromProgress(progress: Int): Float {
