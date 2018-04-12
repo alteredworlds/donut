@@ -39,6 +39,10 @@ class CreditScoreDonut @JvmOverloads constructor(
 
     private val textPaintSmall: Paint
     private val textPaintLarge: Paint
+    private var textCentreX = 0.0f
+    private var textUpperY = 0.0f
+    private var textCentreY = 0.0f
+    private var textLowerY = 0.0f
 
     private val boundaryPaint: Paint
     private val boundaryOuterOval = RectF()
@@ -89,16 +93,44 @@ class CreditScoreDonut @JvmOverloads constructor(
         }
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
+    private val progressFromSweepAngle: Int
+        get() = (maxProgress * sweepAngle / maxSweepAngle).toInt()
+
+    fun setProgressAndMax(progress: Int, max: Int = 100) {
+        maxProgress = max
+        val newSweepAngle =
+                if (0 == maxProgress)
+                    0.0f
+                else
+                    maxSweepAngle * progress / maxProgress
+        if (newSweepAngle != sweepAngle) {
+            val animator = ValueAnimator.ofFloat(sweepAngle, newSweepAngle)
+            animator.interpolator = DecelerateInterpolator()
+            animator.duration = animationDuration.toLong()
+            animator.addUpdateListener { valueAnimator ->
+                sweepAngle = valueAnimator.animatedValue as Float
+                invalidate()
+            }
+            animator.start()
+        }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
 
         // QUESTION: when can (right - left) differ from onDraw() {canvas.width}?
         //  which values can I cache here, and which need to be calculated in onDraw?
-        diameter = Math.min(width, height)
+        diameter = Math.min(w, h)
 
         // TEST SIZES depend on diameter of enclosing circle
         textPaintSmall.textSize = diameter / 14f
         textPaintLarge.textSize = diameter / 4f
+
+        // TEXT POSITIONS
+        textCentreX = w.toFloat() / 2.0f        // horizontally centered text
+        textUpperY = 0.3f * h - 0.5f * (textPaintSmall.descent() + textPaintSmall.ascent())
+        textCentreY = 0.5f * h - 0.5f * (textPaintLarge.descent() + textPaintLarge.ascent())
+        textLowerY = 0.7f * h - 0.5f * (textPaintSmall.descent() + textPaintSmall.ascent())
 
         // Boundary offset just inside enclosing circle
         val outerPad = boundaryRingStrokeWidth / 2.0f
@@ -134,46 +166,22 @@ class CreditScoreDonut @JvmOverloads constructor(
                     progressIndicatorPaint)
 
     private fun drawText(canvas: Canvas) {
-        // horizontally centered text
-        val xPos = canvas.width / 2.0f
-        var yPos: Float
-
         // top line (smaller font)
-        yPos = 0.3f * canvas.height - 0.5f * (textPaintSmall.descent() + textPaintSmall.ascent())
-        canvas.drawText(context.getString(R.string.credit_score_is), xPos, yPos, textPaintSmall)
+        canvas.drawText(context.getString(R.string.credit_score_is),
+                textCentreX,
+                textUpperY,
+                textPaintSmall)
 
         // Progress value (larger font)
-        yPos = 0.5f * canvas.height - 0.5f * (textPaintLarge.descent() + textPaintLarge.ascent())
-        canvas.drawText(getProgressFromSweepAngle().toString(), xPos, yPos, textPaintLarge)
+        canvas.drawText(progressFromSweepAngle.toString(),
+                textCentreX,
+                textCentreY,
+                textPaintLarge)
 
         // bottom line (smaller font)
-        yPos = 0.7f * canvas.height - 0.5f * (textPaintSmall.descent() + textPaintSmall.ascent())
-        canvas.drawText(context.getString(R.string.credit_score_total, maxProgress), xPos, yPos, textPaintSmall)
-    }
-
-    private fun getSweepAngleFromProgress(progress: Int): Float {
-        return if (0 == maxProgress)
-            0.0f
-        else
-            maxSweepAngle * progress / maxProgress
-    }
-
-    private fun getProgressFromSweepAngle(): Int {
-        return (maxProgress * sweepAngle / maxSweepAngle).toInt()
-    }
-
-    fun setProgressAndMax(value: Int, max: Int = 100) {
-        maxProgress = max
-        val newSweepAngle = getSweepAngleFromProgress(value)
-        if (newSweepAngle != sweepAngle) {
-            val animator = ValueAnimator.ofFloat(sweepAngle, newSweepAngle)
-            animator.interpolator = DecelerateInterpolator()
-            animator.duration = animationDuration.toLong()
-            animator.addUpdateListener { valueAnimator ->
-                sweepAngle = valueAnimator.animatedValue as Float
-                invalidate()
-            }
-            animator.start()
-        }
+        canvas.drawText(context.getString(R.string.credit_score_total, maxProgress),
+                textCentreX,
+                textLowerY,
+                textPaintSmall)
     }
 }
