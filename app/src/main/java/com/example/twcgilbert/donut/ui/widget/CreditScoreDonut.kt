@@ -99,10 +99,10 @@ class CreditScoreDonut @JvmOverloads constructor(
     fun setProgressAndMax(progress: Int, max: Int = 100) {
         maxProgress = max
         val newSweepAngle =
-                if (0 == maxProgress)
-                    0.0f
-                else
-                    maxSweepAngle * progress / maxProgress
+                when (maxProgress) {
+                    0 -> 0.0f
+                    else -> maxSweepAngle * progress / maxProgress
+                }
         if (newSweepAngle != sweepAngle) {
             val animator = ValueAnimator.ofFloat(sweepAngle, newSweepAngle)
             animator.interpolator = DecelerateInterpolator()
