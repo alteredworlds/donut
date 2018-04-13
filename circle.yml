@@ -93,13 +93,13 @@ jobs:
           name: AWS S3 get gcloud credentials
           command: |
             mkdir tmp
-            aws s3 cp s3://aw.credentials/Donut-cac7f5e9e3c6.json tmp --region eu-west-1
+            aws s3 cp s3://aw.credentials/donut-firebase-adminsdk.json tmp --region eu-west-1
       - run:
           name: Set Google Cloud target project (CurveDev)
           command: gcloud config set project donut-4bd61
       - run:
           name: Authenticate with Google Cloud
-          command: gcloud auth activate-service-account donut-4bd61@appspot.gserviceaccount.com --key-file tmp/Donut-cac7f5e9e3c6.json
+          command: gcloud auth activate-service-account firebase-adminsdk-bt2h2@donut-4bd61.iam.gserviceaccount.com --key-file tmp/donut-firebase-adminsdk.json
       - run:
           name: Run instrumented test on Firebase Test Lab
           command: gcloud firebase test android run --type instrumentation --app app/build/outputs/apk/debug/app-debug.apk --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk --device model=Nexus6P,version=27,locale=en_US,orientation=portrait --environment-variables coverage=true,coverageFile=/sdcard/tmp/code-coverage/connected/coverage.ec --directories-to-pull=/sdcard/tmp --timeout 20m
