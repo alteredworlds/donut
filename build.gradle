@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.gradle_plugin_version = '3.1.1'
-    ext.kotlin_version = '1.2.31'
+    ext.gradle_plugin_version = '3.1.2'
+    ext.kotlin_version = '1.2.41'
 
     repositories {
         google()
@@ -41,7 +41,7 @@ ext {
     version_name = '1.0'
 
     support_library_version = '27.1.1'
-    constraint_layout_version = '1.0.2'
+    constraint_layout_version = '1.1.0'
 
     junit_version = '4.12'
     espresso_version = '3.0.1'
